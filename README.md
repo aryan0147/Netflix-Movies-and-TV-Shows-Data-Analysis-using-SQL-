@@ -25,9 +25,6 @@ This project involves a comprehensive analysis of Netflix's movies and TV shows 
   * [13. Salman Khan's Appearances in 10 Years](#13-salman-khans-appearances-in-10-years)
   * [14. Top 10 Movie-Producing Countries](#14-top-10-movie-producing-countries)
   * [15. Content Categorization (Good/Bad)](#15-content-categorization-goodbad)
-* [Technologies Used](#technologies-used)
-* [License](#license)
-
 ---
 
 ## 📁 Dataset Overview

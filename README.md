@@ -5,164 +5,198 @@
 ## Overview
 This project involves a comprehensive analysis of Netflix's movies and TV shows data using SQL. The goal is to extract valuable insights and answer various business questions based on the dataset. The following README provides a detailed account of the project's objectives, business problems, solutions, findings, and conclusions.
 
-## Objectives
+## 📌 Table of Contents
 
-- Analyze the distribution of content types (movies vs TV shows).
-- Identify the most common ratings for movies and TV shows.
-- List and analyze content based on release years, countries, and durations.
-- Explore and categorize content based on specific criteria and keywords.
+* [Dataset Overview](#dataset-overview)
+* [Business Problems & SQL Solutions](#business-problems--sql-solutions)
 
-## Dataset
+  * [1. Movies vs TV Shows Count](#1-movies-vs-tv-shows-count)
+  * [2. Most Common Rating](#2-most-common-rating)
+  * [3. Movies Released in 2020](#3-movies-released-in-2020)
+  * [4. Top 5 Countries with Most Content](#4-top-5-countries-with-most-content)
+  * [5. Longest Movie](#5-longest-movie)
+  * [6. Content Added in the Last 5 Years](#6-content-added-in-the-last-5-years)
+  * [7. Content by Rajiv Chilaka](#7-content-by-rajiv-chilaka)
+  * [8. TV Shows with More Than 5 Seasons](#8-tv-shows-with-more-than-5-seasons)
+  * [9. Content Count by Genre](#9-content-count-by-genre)
+  * [10. Content Released in India Over Years](#10-content-released-in-india-over-years)
+  * [11. Documentary Movies](#11-documentary-movies)
+  * [12. Content Without Director Info](#12-content-without-director-info)
+  * [13. Salman Khan's Appearances in 10 Years](#13-salman-khans-appearances-in-10-years)
+  * [14. Top 10 Movie-Producing Countries](#14-top-10-movie-producing-countries)
+  * [15. Content Categorization (Good/Bad)](#15-content-categorization-goodbad)
+* [Technologies Used](#technologies-used)
+* [License](#license)
 
-The data for this project is sourced from the Kaggle dataset:
+---
 
-- **Dataset Link:** [Movies Dataset](https://www.kaggle.com/datasets/shivamb/netflix-shows?resource=download)
+## 📁 Dataset Overview
 
+The dataset used contains detailed information on Netflix content including:
 
-## Netflix Data Analysis using SQL
+* Title
+* Type (Movie/TV Show)
+* Director, Cast, Genre
+* Country
+* Release Year
+* Duration
+* Date Added
+* Description
 
--- Read the Data
-select * from netflix_data;
+---
 
- -- Bussiness Problems Sets 
- 
--- 15 Business Problems & Solutions
+## 📊 Business Problems & SQL Solutions
 
--- 1. Count the number of Movies vs TV Shows.
+### 1. Movies vs TV Shows Count
 
-select type,count(*) as "total content"
-from netflix_data
-group by type;
-
--- 2. Find the most common rating for movies and TV shows.
-with X as (
-select 
-	type, 
-    rating, count(*),
-    Rank() Over(partition by type order by count(*) desc) as ranking
-from netflix_data
-group by type, rating
-order by 1,3 desc)
-
-select type, rating 
-from X
-where ranking = 1;
-
-
--- 3. List all movies released in a specific year (e.g., 2020).
-
-select type,title ,release_year from netflix_data
-where release_year in (2020) and
-type = "Movie";
-
-
--- 4. Find the top 5 countries with the most content on Netflix.
-
-select country, count(*) 
-from netflix_data
-group by 1
-order by 2 desc limit 5;
-
-
--- 5. Identify the longest movie.
-
-select *
-from netflix_data
-where type = "Movie"
-and duration = (select Max(duration) from netflix_data);
-
-
--- 6. Find content added in the last 5 years
-
-SELECT *, DATE_FORMAT(date_added, "%m-%d-%Y") AS added_date
+```sql
+SELECT type, COUNT(*) AS total_content
 FROM netflix_data
-WHERE date_added <= CURDATE() - INTERVAL 5 YEAR;
-;
+GROUP BY type;
+```
 
--- 7. Find all the movies/TV shows by director 'Rajiv Chilaka'!
+### 2. Most Common Rating
 
-select * from netflix_data
-where director Like "%Rajiv Chilaka%";
+```sql
+WITH X AS (
+    SELECT type, rating, COUNT(*) AS rating_count,
+           RANK() OVER (PARTITION BY type ORDER BY COUNT(*) DESC) AS ranking
+    FROM netflix_data
+    GROUP BY type, rating
+)
+SELECT type, rating
+FROM X
+WHERE ranking = 1;
+```
 
--- 8. List all TV shows with more than 5 seasons
+### 3. Movies Released in 2020
 
-select * from netflix_data
-where type = "TV Show"
-and
-duration > "5 Season";
+```sql
+SELECT type, title, release_year
+FROM netflix_data
+WHERE release_year = 2020 AND type = 'Movie';
+```
 
--- 9. Count the number of content items in each genre
+### 4. Top 5 Countries with Most Content
 
-select distinct(listed_in), count(*)
-from netflix_data
-group by 1
-order by 2 desc;
+```sql
+SELECT country, COUNT(*) AS total_content
+FROM netflix_data
+GROUP BY country
+ORDER BY total_content DESC
+LIMIT 5;
+```
 
+### 5. Longest Movie
 
--- 10.Find each year and the average numbers of content release in India on netflix. 
--- return top 5 year with highest avg content release!
+```sql
+SELECT *
+FROM netflix_data
+WHERE type = 'Movie'
+  AND duration = (
+      SELECT MAX(duration)
+      FROM netflix_data
+      WHERE type = 'Movie'
+  );
+```
 
-SELECT 
-    YEAR(STR_TO_DATE(date_added, '%M %d, %Y')) AS year,
-    COUNT(*) AS count
+### 6. Content Added in the Last 5 Years
+
+```sql
+SELECT *, DATE_FORMAT(date_added, '%m-%d-%Y') AS added_date
+FROM netflix_data
+WHERE date_added >= CURDATE() - INTERVAL 5 YEAR;
+```
+
+### 7. Content by Rajiv Chilaka
+
+```sql
+SELECT *
+FROM netflix_data
+WHERE director LIKE '%Rajiv Chilaka%';
+```
+
+### 8. TV Shows with More Than 5 Seasons
+
+```sql
+SELECT *
+FROM netflix_data
+WHERE type = 'TV Show' AND duration > '5 Season';
+```
+
+### 9. Content Count by Genre
+
+```sql
+SELECT listed_in, COUNT(*) AS genre_count
+FROM netflix_data
+GROUP BY listed_in
+ORDER BY genre_count DESC;
+```
+
+### 10. Content Released in India Over Years (Top 5)
+
+```sql
+SELECT YEAR(STR_TO_DATE(date_added, '%M %d, %Y')) AS year, COUNT(*) AS content_count
 FROM netflix_data
 WHERE country LIKE '%India%'
 GROUP BY year
-ORDER BY year;
+ORDER BY content_count DESC
+LIMIT 5;
+```
 
+### 11. Documentary Movies
 
--- 11. List all movies that are documentaries.
-
-select * from netflix_data
-where type = "Movie" and
-listed_in like '%Documentaries%';
-
--- 12. Find all content without a director.
-
-select * from netflix_data
-where director is null;
-
-
--- 13. Find how many movies actor 'Salman Khan' appeared in last 10 years!
-
+```sql
 SELECT *
 FROM netflix_data
-WHERE 
-  cast LIKE '%Salman Khan%'
+WHERE type = 'Movie' AND listed_in LIKE '%Documentaries%';
+```
+
+### 12. Content Without Director Info
+
+```sql
+SELECT *
+FROM netflix_data
+WHERE director IS NULL;
+```
+
+### 13. Salman Khan’s Appearances in Last 10 Years
+
+```sql
+SELECT *
+FROM netflix_data
+WHERE cast LIKE '%Salman Khan%'
   AND release_year >= YEAR(CURDATE()) - 10;
-;
+```
 
+### 14. Top 10 Movie-Producing Countries
 
--- 14.Find the top 10 countries that have produced the highest number of movies in the netflix table.
-
+```sql
 SELECT country, COUNT(*) AS movie_count
 FROM netflix_data
+WHERE type = 'Movie'
 GROUP BY country
 ORDER BY movie_count DESC
 LIMIT 10;
+```
 
+### 15. Content Categorization (Good/Bad)
 
--- 15. Categorize the content based on the presence of the keywords 'kill' and 'violence' in 
--- the description field. Label content containing these keywords as 'Bad' and all other 
--- content as 'Good'. Count how many items fall into each category.
-
-
-SELECT 
-    category,
-	TYPE,
-    COUNT(*) AS content_count
+```sql
+SELECT category, type, COUNT(*) AS content_count
 FROM (
-    SELECT 
-		*,
-        CASE 
-            WHEN description LIKE '%kill%' OR description LIKE '%violence%' THEN 'Bad'
-            ELSE 'Good'
-        END AS category
+    SELECT *,
+           CASE
+               WHEN description LIKE '%kill%' OR description LIKE '%violence%' THEN 'Bad'
+               ELSE 'Good'
+           END AS category
     FROM netflix_data
 ) AS categorized_content
-GROUP BY 1,2
-ORDER BY 2;
+GROUP BY category, type
+ORDER BY type;
+```
 
+---
 
 **Objective:** Categorize content as 'Bad' if it contains 'kill' or 'violence' and 'Good' otherwise. Count the number of items in each category.
 
@@ -174,3 +208,9 @@ ORDER BY 2;
 - **Content Categorization:** Categorizing content based on specific keywords helps in understanding the nature of content available on Netflix.
 
 This analysis provides a comprehensive view of Netflix's content and can help inform content strategy and decision-making.
+
+## 🛠️ Technologies Used
+
+* SQL (MySQL syntax)
+* Jupyter Notebook / SQL Editor
+* Netflix Dataset (public)
